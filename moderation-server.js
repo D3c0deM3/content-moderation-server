@@ -62,7 +62,7 @@ app.post("/moderate", async (req, res) => {
   }
 });
 
-app.delete("/delete-image/:public_id", authenticate, async (req, res) => {
+app.delete("/delete-image/:public_id", async (req, res) => {
   const public_id = req.params.public_id;
   if (!public_id || typeof public_id !== "string" || public_id.trim() === "") {
     return res.status(400).json({ error: "Invalid public_id" });
@@ -90,7 +90,7 @@ app.delete("/delete-image/:public_id", authenticate, async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`Moderation server running on port ${PORT}`);
 });
