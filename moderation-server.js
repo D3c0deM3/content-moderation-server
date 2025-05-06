@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
+const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
 const app = express();
@@ -8,6 +9,12 @@ app.use(cors());
 app.use(express.json());
 
 const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 app.post("/moderate", async (req, res) => {
   const { content } = req.body;
@@ -52,6 +59,28 @@ app.post("/moderate", async (req, res) => {
     res
       .status(500)
       .json({ error: "Perspective API error", details: err.message });
+  }
+});
+
+app.delete("/delete-image", async (req, res) => {
+  const public_id = req.query.public_id;
+  if (!public_id)
+    return res.status(400).json({ error: "No public_id provided" });
+  try {
+    const result = await cloudinary.uploader.destroy(public_id, {
+      resource_type: "image",
+    });
+    if (result.result === "ok" || result.result === "not found") {
+      res.json({ success: true });
+    } else {
+      res
+        .status(500)
+        .json({ error: "Cloudinary deletion failed", details: result });
+    }
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Cloudinary API error", details: err.message });
   }
 });
 
