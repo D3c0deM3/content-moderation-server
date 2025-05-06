@@ -62,22 +62,28 @@ app.post("/moderate", async (req, res) => {
   }
 });
 
-app.delete("/delete-image", async (req, res) => {
-  const public_id = req.query.public_id;
-  if (!public_id)
-    return res.status(400).json({ error: "No public_id provided" });
+app.delete("/delete-image/:public_id", authenticate, async (req, res) => {
+  const public_id = req.params.public_id;
+  if (!public_id || typeof public_id !== "string" || public_id.trim() === "") {
+    return res.status(400).json({ error: "Invalid public_id" });
+  }
   try {
+    console.log(`Deleting image with public_id: ${public_id}`);
     const result = await cloudinary.uploader.destroy(public_id, {
       resource_type: "image",
     });
-    if (result.result === "ok" || result.result === "not found") {
-      res.json({ success: true });
+    console.log(`Deletion result: ${result.result}`);
+    if (result.result === "ok") {
+      res.json({ success: true, message: "Image deleted successfully" });
+    } else if (result.result === "not found") {
+      res.status(404).json({ success: false, message: "Image not found" });
     } else {
       res
         .status(500)
         .json({ error: "Cloudinary deletion failed", details: result });
     }
   } catch (err) {
+    console.error(`Error deleting image ${public_id}:`, err);
     res
       .status(500)
       .json({ error: "Cloudinary API error", details: err.message });
